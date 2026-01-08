@@ -7,9 +7,9 @@ Route::get('/', function () {
 });
 
 Route::get('Profesors/profesor', function () {
-    return view('profesor');
+    return view('Profesors.profesor');
 });
 
 Route::get('Profesors/listado', function () {
-    return view('listado');
+    return view('Profesors.listado');
 });
