@@ -177,18 +177,26 @@
 <div class="login-wrapper">
     <div class="login-container">
         <h2>Iniciar sesión</h2>
-        <form>
+        <form action="{{ url('/') }}" method="POST">
+            @csrf
             <div class="form-group">
                 <label for="email">Email</label>
-                <input type="email" id="email" placeholder="correo@ejemplo.com" required>
+                <input type="text" id="email" placeholder="correo@ejemplo.com" name="email" required >
             </div>
 
             <div class="form-group">
                 <label for="password">Contraseña</label>
-                <input type="password" id="password" placeholder="••••••••" required>
+                <input type="password" id="password" placeholder="••••••••" name="password" required>
             </div>
 
             <button type="submit">Entrar</button>
+            <br><br>
+            @if(session('error'))
+                <p style="color:red; text-align:center;">
+                    {{ session('error') }}
+                </p>
+            @endif
+
         </form>
     </div>
 </div>
