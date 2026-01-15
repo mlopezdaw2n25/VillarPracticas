@@ -6,7 +6,7 @@ use Closure;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
 
-class Checklogin
+class CheckAdmin
 {
     /**
      * Handle an incoming request.
@@ -17,6 +17,10 @@ public function handle($request, Closure $next)
 {
     if (!session()->has('usuari_id')) {
         return redirect('/')->with('error', 'Has de fer login');
+    }
+
+    if (session('rol') !== 'admin') {
+        return redirect('/')->with('error', 'No tens permisos');
     }
 
     return $next($request);

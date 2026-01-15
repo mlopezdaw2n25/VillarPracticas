@@ -6,7 +6,7 @@ use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 use App\Models\usuaris;
 
-class UsuarisSeeder extends Seeder
+class AdminSeeder extends Seeder
 {
     /**
      * Run the database seeds.
@@ -16,11 +16,11 @@ class UsuarisSeeder extends Seeder
         //
         for($i = 0; $i < 5; $i++){
             $u = new usuaris();
-            $u->nom = "mario".$i;
-            $u->email = "mlopez".$i."@gmail.com";
+            $u->nom = "dani".$i;
+            $u->email = "admin".$i."@gmail.com";
             $u->contrasenya = "contrasenya".$i;
             $u->correo_notificaciones = "vacio".$i;
-            $u->rol = "profe";
+            $u->rol = "admin";
             $u->activo = "si";
             $u->save();
         }
