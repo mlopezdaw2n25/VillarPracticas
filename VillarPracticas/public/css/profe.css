@@ -406,3 +406,50 @@
     a {
   text-decoration: none;
 }
+
+/* ===================== */
+/* SALUDO PROFESOR */
+/* ===================== */
+#HolaProfe {
+    position: absolute;
+    top: 90px; /* debajo del navbar */
+    right: 40px;
+    padding: 1.2rem 2rem;
+    background: rgba(255, 255, 255, 0.92);
+    backdrop-filter: blur(12px);
+    border-radius: 18px;
+    border: 1px solid rgba(229, 231, 235, 0.8);
+    box-shadow: 0 18px 40px rgba(0, 0, 0, 0.12);
+    transition: all 0.3s ease;
+    z-index: 10;
+}
+
+/* Texto */
+#HolaProfe h1 {
+    font-size: 1.35rem;
+    font-weight: 500;
+    color: var(--text);
+    letter-spacing: -0.02em;
+    margin: 0;
+}
+
+/* Nombre del profesor destacado */
+#HolaProfe h1 span {
+    font-weight: 700;
+    color: var(--primary);
+}
+
+/* Hover elegante */
+#HolaProfe:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 25px 55px rgba(0, 0, 0, 0.18);
+}
+
+/* Responsive */
+@media (max-width: 900px) {
+    #HolaProfe {
+        position: static;
+        margin: 1.5rem auto 0;
+        width: fit-content;
+    }
+}

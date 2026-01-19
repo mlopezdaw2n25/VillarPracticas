@@ -45,8 +45,8 @@ public function VistaProfes($id)
     if (session('rol') !== 'profe') {
         return redirect('/')->with('error', 'No tens permisos');
     }
-
-    return view('Profesors/profesor', ['id' => $id]);
+    $profesor = usuaris::find($id);
+    return view('Profesors/profesor', ['id' => $id, 'profesor' => $profesor]);
 }
 
 public function VistaListado($id){

@@ -47,13 +47,14 @@
 
     <!-- Contenido -->
 <main class="content">
-
+<div id="HolaProfe">
+  <h1>Hola, {{ $profesor->nom}}</h1>
+</div>
   <!-- ===================== -->
   <!-- VISTA INICIO (CALENDARIO) -->
   <!-- ===================== -->
   <section class="view" id="view-inicio">
     <section class="calendar-container">
-
       <!-- LEFT -->
       <div class="calendar-left">
         <div class="title">
