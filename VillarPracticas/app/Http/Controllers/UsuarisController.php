@@ -39,6 +39,25 @@ public function login(Request $req)
 
     return back()->with('error', 'Usuari o contrasenya incorrectes!');
 }
+public function VistaMisReservas($id)
+{
+    if (session('rol') !== 'profe') {
+        return redirect('/')->with('error', 'No tens permisos');
+    }
+
+    // Evita que un profe entre con otro id
+    if ((int)$id !== (int)session('usuari_id')) {
+        return redirect('/')->with('error', 'No tens permisos');
+    }
+
+    $profesor = usuaris::find($id);
+
+    return view('Profesors.misreservas', [
+        'id' => $id,
+        'profesor' => $profesor
+    ]);
+}
+
 
 public function VistaProfes($id)
 {

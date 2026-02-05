@@ -3,12 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <title>Login - Centre Villar</title>
-
-    <!-- Fuente minimalista -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- Fuente -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500&display=swap" rel="stylesheet">
-    
-  <link rel="stylesheet" href="{{ asset('css/home.css') }}">
+
+    <link rel="stylesheet" href="{{ asset('css/home.css') }}">
 </head>
+
 <body>
 
 <!-- NAVBAR -->
@@ -25,35 +26,39 @@
             <a href="https://centrevillar.com/secretaria-es/">Secretaría</a>
             <a href="https://centrevillar.com/contacto/">Contacto</a>
         </nav>
+
     </div>
 </header>
 
-<!-- LOGIN VILLAR PRACTICAS-->
+<!-- LOGIN -->
 <div class="login-wrapper">
     <div class="login-container">
+
         <h2>Iniciar sesión</h2>
+
         <form action="{{ url('/') }}" method="POST">
             @csrf
+
             <div class="form-group">
-                <label for="email">Email</label>
-                <input type="text" id="email" placeholder="correo@ejemplo.com" name="email" required >
+                <label>Email</label>
+                <input type="text" name="email" placeholder="correo@ejemplo.com" required>
             </div>
 
             <div class="form-group">
-                <label for="password">Contraseña</label>
-                <input type="password" id="password" placeholder="••••••••" name="password" required>
+                <label>Contraseña</label>
+                <input type="password" name="password" placeholder="••••••••" required>
             </div>
 
             <button type="submit">Entrar</button>
-            <br><br>
+
             @if(session('error'))
-                <p style="color:red; text-align:center;">
-                    {{ session('error') }}
-                </p>
+                <p class="error">{{ session('error') }}</p>
             @endif
 
         </form>
+
     </div>
 </div>
+
 </body>
 </html>

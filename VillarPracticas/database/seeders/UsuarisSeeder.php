@@ -14,12 +14,12 @@ class UsuarisSeeder extends Seeder
     public function run(): void
     {
         //
-        for($i = 0; $i < 5; $i++){
+        for($i = 0; $i < 1; $i++){
             $u = new usuaris();
-            $u->nom = "mario".$i;
-            $u->email = "mlopez".$i."@gmail.com";
-            $u->contrasenya = "contrasenya".$i;
-            $u->correo_notificaciones = "vacio".$i;
+            $u->nom = "correo".$i;
+            $u->email = "dbernaus.daw2n25@lamerce.com";
+            $u->contrasenya = "1";
+            $u->correo_notificaciones = "dbernaus.daw2n25@lamerce.com";
             $u->rol = "profe";
             $u->activo = "si";
             $u->save();

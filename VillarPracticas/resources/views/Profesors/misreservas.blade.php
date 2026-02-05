@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Mis Reservas</title>
+
+  <meta name="csrf-token" content="{{ csrf_token() }}">
+
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="{{ asset('css/misreservas.css') }}">
+</head>
+
+<body>
+
+<header class="navbar">
+  <div class="navbar-container">
+    <div class="logo">
+      <img src="{{ asset('img/image.png') }}" alt="Centre Villar">
+    </div>
+
+    <nav class="menu">
+      <a href="https://centrevillar.com/el-centro/">El Centro</a>
+      <a href="https://centrevillar.com/proyecto-educativo/">Proyecto Educativo</a>
+      <a href="https://centrevillar.com/secretaria-es/">Secretaría</a>
+      <a href="https://centrevillar.com/contacto/">Contacto</a>
+    </nav>
+  </div>
+</header>
+
+<div class="layout">
+
+  <!-- SIDEBAR -->
+  <aside class="side-navbar">
+    <h3>Panel</h3>
+
+    <a href="{{ url('Profesors/profesor/'.$id) }}">
+      <button type="button">Inicio</button>
+    </a>
+
+    <button type="button" class="active">Mis reservas</button>
+
+    <a href="{{ route('logout') }}">
+      <button type="button">Cerrar sesión</button>
+    </a>
+  </aside>
+
+  <!-- CONTENIDO -->
+  <main class="content">
+
+    <!-- GRID -->
+    <div class="reservas-grid">
+
+      <!-- ===================== -->
+      <!-- MIS RESERVAS -->
+      <!-- ===================== -->
+      <div class="reservas-card primary">
+
+        <div class="reservas-card-header">
+          <h2>
+            Mis reservas
+            <span class="badge-main">Principal</span>
+          </h2>
+          <p>Aquí puedes modificar o anular tus reservas.</p>
+        </div>
+
+        <div class="reservas-card-body">
+          <div style="overflow:auto;max-height:620px;">
+            <table style="width:100%;border-collapse:separate;border-spacing:0;"
+                   id="tblMisReservas"></table>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- ===================== -->
+      <!-- TODAS LAS RESERVAS -->
+      <!-- ===================== -->
+      <div class="reservas-card">
+
+        <div class="reservas-card-header">
+          <h2>Todas las reservas</h2>
+          <p>Reservas realizadas por todos los usuarios.</p>
+        </div>
+
+        <div class="reservas-card-body">
+          <div style="overflow:auto;max-height:620px;">
+            <table style="width:100%;border-collapse:separate;border-spacing:0;"
+                   id="tblAllReservas"></table>
+          </div>
+        </div>
+
+      </div>
+
+    </div>
+
+  </main>
+
+</div>
+
+<!-- ===================== -->
+<!-- MODAL EDITAR -->
+<!-- ===================== -->
+<div id="modalEdit" style="display:none;
+  position:fixed; inset:0;
+  background:rgba(0,0,0,.45);
+  align-items:center;
+  justify-content:center;
+  z-index:999;">
+
+  <div style="background:#fff;width:min(560px,95%);border-radius:20px;padding:1.4rem;box-shadow:var(--shadow);">
+
+    <h3 style="font-size:1.1rem;font-weight:900;">Modificar reserva</h3>
+    <p style="color:var(--muted);margin:.35rem 0 1rem;">
+      Cambia la fecha y/o la hora.
+    </p>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:.8rem;">
+      <div>
+        <label>Nueva fecha</label>
+        <input type="date" id="editFecha">
+      </div>
+
+      <div>
+        <label>Nueva hora</label>
+        <select id="editHora"></select>
+      </div>
+    </div>
+
+    <div style="display:flex;gap:.6rem;justify-content:flex-end;margin-top:1.1rem;">
+      <button class="mini" id="btnCancelEdit">Cancelar</button>
+      <button class="mini primary" id="btnSaveEdit">Guardar</button>
+    </div>
+
+  </div>
+</div>
+
+<!-- VARIABLES -->
+<script>
+  window.__USER_ID__ = @json($id);
+</script>
+
+<script src="{{ asset('js/misreservas.js') }}"></script>
+
+</body>
+</html>

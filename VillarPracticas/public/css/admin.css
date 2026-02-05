@@ -513,3 +513,127 @@
       background: var(--border);
       margin: .8rem 0 1rem;
     }
+    /* ===================================================== */
+/* ================== RESPONSIVE GLOBAL ================= */
+/* ===================================================== */
+
+@media (max-width: 900px) {
+
+  /* ====== LAYOUT ====== */
+  .layout {
+    flex-direction: column;
+  }
+
+  .content {
+    padding: 1.2rem 1rem 2rem;
+  }
+
+  /* ====== SIDEBAR ====== */
+  .side-navbar {
+    display: none;
+  }
+
+  /* ====== NAVBAR ====== */
+  .navbar-container {
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+
+  .menu {
+    justify-content: center;
+    gap: 1rem;
+  }
+
+  /* ====== CALENDAR (PROFESOR + LISTADO) ====== */
+  .calendar-container {
+    grid-template-columns: 1fr;
+  }
+
+  .calendar-left {
+    border-right: none;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .calendar-right {
+    padding-top: 1.4rem;
+  }
+
+  #slots {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  /* ====== TARJETAS DOBLES (MIS RESERVAS) ====== */
+  .reservas-grid {
+    grid-template-columns: 1fr;
+    gap: 1.4rem;
+  }
+
+  /* ====== TABLAS ====== */
+  table {
+    min-width: 650px;
+  }
+
+  .table-wrapper,
+  div[style*="overflow:auto"] {
+    overflow-x: auto;
+  }
+
+  /* ====== TEXTOS ====== */
+  h2 {
+    font-size: 1.15rem;
+  }
+
+  .title h2 {
+    font-size: 1.15rem;
+  }
+
+  /* ====== BOTONES ====== */
+  .mini {
+    width: 100%;
+    text-align: center;
+  }
+
+  .actions {
+    flex-direction: column;
+  }
+
+  /* ====== MODAL ====== */
+  #modalEdit > div {
+    width: 95%;
+  }
+
+}
+
+/* ===================================================== */
+/* =================== MOBILE PEQUEÑO ================== */
+/* ===================================================== */
+
+@media (max-width: 480px) {
+
+  #slots {
+    grid-template-columns: 1fr;
+  }
+
+  .slot {
+    font-size: .9rem;
+    padding: .8rem;
+  }
+
+  input,
+  select {
+    font-size: .9rem;
+  }
+
+  .selected-info {
+    font-size: .9rem;
+  }
+
+  .navbar-container {
+    padding: .7rem .8rem;
+  }
+
+  .logo img {
+    height: 34px;
+  }
+
+}

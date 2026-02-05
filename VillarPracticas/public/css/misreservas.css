@@ -1,0 +1,337 @@
+/* ===================== */
+/* VARIABLES */
+:root{
+  --bg1:#667eea;
+  --bg2:#764ba2;
+  --card:#ffffff;
+  --text:#1f2937;
+  --muted:#6b7280;
+  --primary:#667eea;
+  --primaryHover:#5a67d8;
+  --border:#e5e7eb;
+  --soft:#f3f4f6;
+  --shadow:0 20px 50px rgba(0,0,0,.18);
+}
+
+/* ===================== */
+/* RESET */
+*{
+  margin:0;
+  padding:0;
+  box-sizing:border-box;
+  font-family:"Inter",system-ui,sans-serif;
+}
+
+body{
+  min-height:100vh;
+  background:linear-gradient(135deg,var(--bg1),var(--bg2));
+  color:var(--text);
+}
+
+a{ text-decoration:none; }
+
+/* ===================== */
+/* NAVBAR */
+.navbar{
+  position:sticky;
+  top:0;
+  z-index:20;
+  background:rgba(255,255,255,.92);
+  backdrop-filter:blur(10px);
+  border-bottom:1px solid rgba(229,231,235,.8);
+}
+
+.navbar-container{
+  max-width:1300px;
+  margin:auto;
+  padding:.9rem 1.6rem;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:1rem;
+}
+
+.logo img{ height:40px; }
+
+.menu{
+  display:flex;
+  gap:1.4rem;
+  flex-wrap:wrap;
+}
+
+.menu a{
+  color:#111827;
+  font-size:.95rem;
+  font-weight:500;
+  position:relative;
+}
+
+.menu a::after{
+  content:"";
+  position:absolute;
+  left:0;
+  bottom:-6px;
+  width:0;
+  height:2px;
+  background:var(--primary);
+  transition:.2s;
+}
+
+.menu a:hover::after{ width:100%; }
+
+/* ===================== */
+/* LAYOUT */
+.layout{
+  display:flex;
+  min-height:calc(100vh - 64px);
+}
+
+/* ===================== */
+/* SIDEBAR */
+.side-navbar{
+  width:240px;
+  padding:1.5rem 1rem;
+  background:rgba(255,255,255,.92);
+  backdrop-filter:blur(10px);
+  border-right:1px solid rgba(229,231,235,.75);
+  display:flex;
+  flex-direction:column;
+}
+
+.side-navbar h3{
+  font-size:.9rem;
+  color:var(--muted);
+  margin-bottom:1rem;
+  padding-left:.4rem;
+}
+
+.side-navbar button{
+  width:100%;
+  padding:.85rem .9rem;
+  margin-bottom:.65rem;
+  border-radius:12px;
+  background:#fff;
+  border:1px solid var(--border);
+  cursor:pointer;
+  font-size:.95rem;
+  display:flex;
+  gap:.6rem;
+  transition:.2s;
+}
+
+.side-navbar button:hover{
+  transform:translateY(-1px);
+  box-shadow:0 12px 30px rgba(0,0,0,.1);
+}
+
+/* activo */
+.side-navbar .active{
+  background:var(--primary);
+  color:#fff;
+  border:none;
+  box-shadow:0 14px 30px rgba(102,126,234,.35);
+}
+
+/* contenedor inferior */
+.bottom-actions{
+  display:flex;
+  flex-direction:column;
+  gap:.6rem;
+}
+
+/* logout */
+.logout{
+  background:#ef4444;
+  color:white;
+  border:none;
+}
+
+.logout:hover{
+  background:#dc2626;
+}
+
+/* ===================== */
+/* CONTENT */
+.content{
+  flex:1;
+  padding:3rem 2rem;
+  display:flex;
+  justify-content:center;
+  align-items:flex-start;
+}
+
+/* ===================== */
+/* GRID RESERVAS */
+.reservas-grid{
+  width:min(1200px,100%);
+  display:grid;
+  grid-template-columns:1.1fr .9fr;
+  gap:2rem;
+}
+
+/* ===================== */
+/* TARJETAS */
+.reservas-card{
+  background:#fff;
+  border-radius:22px;
+  box-shadow:var(--shadow);
+  overflow:hidden;
+}
+
+.reservas-card.primary{
+  border:2px solid rgba(102,126,234,.35);
+}
+
+.reservas-card-header{
+  padding:1.6rem 1.8rem 1.2rem;
+  border-bottom:1px solid var(--border);
+}
+
+.reservas-card-header h2{
+  font-size:1.3rem;
+  font-weight:800;
+}
+
+.reservas-card-header p{
+  color:var(--muted);
+  margin-top:.3rem;
+}
+
+.badge-main{
+  background:var(--primary);
+  color:white;
+  font-size:.7rem;
+  padding:.25rem .6rem;
+  border-radius:999px;
+  margin-left:.5rem;
+}
+
+/* BODY */
+.reservas-card-body{
+  padding:1.4rem 1.6rem 2rem;
+}
+
+/* ===================== */
+/* TABLES */
+table{
+  width:100%;
+  border-collapse:separate;
+  border-spacing:0;
+}
+
+th,td{
+  padding:.85rem;
+  font-size:.9rem;
+  border-bottom:1px solid var(--border);
+  text-align:left;
+}
+
+th{
+  font-size:.75rem;
+  text-transform:uppercase;
+  color:var(--muted);
+  position:sticky;
+  top:0;
+  background:#fff;
+}
+
+tr:hover td{
+  background:rgba(102,126,234,.06);
+}
+
+/* ===================== */
+/* BOTONES MINI */
+.mini{
+  padding:.45rem .7rem;
+  border-radius:10px;
+  border:1px solid var(--border);
+  background:#fff;
+  font-size:.8rem;
+  cursor:pointer;
+}
+
+.mini.primary{
+  background:var(--primary);
+  color:white;
+  border:none;
+}
+
+.mini:hover{
+  transform:translateY(-1px);
+}
+
+/* ===================== */
+/* MODAL */
+.hidden{ display:none; }
+
+/* ===================== */
+/* RESPONSIVE GENERAL */
+/* ========================================================= */
+/* === MIS RESERVAS - MOBILE FULL WIDTH (COMO LOGIN) ======= */
+/* ========================================================= */
+
+@media (max-width: 980px){
+
+  /* Navbar en columna */
+  .navbar-container{
+    flex-direction: column;
+    gap: 1rem;
+  }
+
+  .menu{
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 1rem;
+  }
+
+  /* Contenido más ajustado */
+  .content{
+    padding: 1rem;
+  }
+
+  /* Grid ocupa todo el ancho */
+  .reservas-grid{
+    width:100%;
+    grid-template-columns:1fr;
+    gap:1.2rem;
+  }
+
+  /* Tarjetas full width y más cuadradas */
+  .reservas-card{
+    width:100%;
+    border-radius:12px;
+  }
+
+  .reservas-card-header{
+    padding:1.2rem 1.2rem .9rem;
+  }
+
+  .reservas-card-body{
+    padding:1rem 1.2rem 1.4rem;
+  }
+
+  /* Títulos ligeramente mayores */
+  .reservas-card-header h2{
+    font-size:1.4rem;
+  }
+
+  .reservas-card-header p{
+    font-size:.95rem;
+  }
+
+  /* Tablas */
+  td, th{
+    font-size:.9rem;
+    padding:.7rem;
+  }
+
+  /* Botones y selects */
+  button,
+  .mini,
+  input,
+  select{
+    font-size:1rem;
+    padding:.8rem;
+  }
+
+}

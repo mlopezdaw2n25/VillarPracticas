@@ -1,243 +1,218 @@
-  const slotsContainer = document.getElementById("slots");        // Contenedor donde se pintan los botones de horas
-  const datePicker = document.getElementById("datePicker");       // Input type="date"
-  const selectedInfo = document.getElementById("selectedInfo");   // Texto donde mostramos la reserva seleccionada
-  const slotsHint = document.getElementById("slotsHint");         // Texto “Para el día X”
-  const logoutBtn = document.getElementById("logoutBtn");         // Botón cerrar sesión
+document.addEventListener("DOMContentLoaded", () => {
 
-  // DATOS DE EJEMPLO (SIMULAN BD/API)
+  const slotsContainer = document.getElementById("slots");
+  const datePicker = document.getElementById("datePicker");
+  const selectedInfo = document.getElementById("selectedInfo");
+  const slotsHint = document.getElementById("slotsHint");
+  const btnContinue = document.getElementById("btnContinue");
 
-  const booked = {
-    "2026-01-15": ["10:00", "13:30"], //Ejemplo de hora reservada
-  };
+  const USER_ID = window.__USER_ID__ ?? null;
 
-  // Reservas del usuario (tabla “Mis reservas”)
-  let misReservas = [
-    { id: 1, fecha: "2026-01-15", hora: "10:00", recurso: "Aula 109", tipo: "Espacio" },
-    { id: 2, fecha: "2026-01-18", hora: "12:00", recurso: "Cámara Canon #2", tipo: "Material" },
-  ];
+  let selectedDate = null;
+  let selectedSlots = [];
 
-  // FUNCIONES PARA HORAS Y CALENDARIO
- function generateSlots() {
-  return [
-    "08:00",
-    "09:00",
-    "10:00",
-    "11:30",
-    "12:30",
-    "13:30",
-    "14:30",
-    "15:00",
-    "16:00",
-    "17:00",
-    "18:00",
-    "19:00",
-    "20:00"
-  ];
-}
-
-  // Quita la clase "active" a todos los botones de hora
-  function clearActiveSlots() {
-    document.querySelectorAll(".slot").forEach(btn => btn.classList.remove("active"));
+  // =============================
+  // UTILIDADES FECHA
+  // =============================
+  function formatToday() {
+    const d = new Date();
+    const yyyy = d.getFullYear();
+    const mm = String(d.getMonth() + 1).padStart(2, "0");
+    const dd = String(d.getDate()).padStart(2, "0");
+    return `${yyyy}-${mm}-${dd}`;
   }
 
-  // Pinta los botones de hora para una fecha concreta
-  function renderSlots(date) {
-    const slots = generateSlots();
-    const reservedTimes = booked[date] || []; // horas ocupadas ese día (si no hay, array vacío)
+  function isPastDate(dateStr) {
+    if (!dateStr) return true;
+    return dateStr < formatToday();
+  }
 
-    // Limpia el contenedor antes de volver a pintar
+  // =============================
+  // UI
+  // =============================
+  function updateContinueButton() {
+    if (!btnContinue) return;
+    btnContinue.disabled = !(selectedDate && selectedSlots.length > 0);
+  }
+
+  function updateSelectedInfo() {
+    if (!selectedInfo) return;
+
+    if (selectedSlots.length === 0) {
+      selectedInfo.textContent =
+        "Selecciona una hora para ver tu reserva aquí.";
+      return;
+    }
+
+    const ordered = [...selectedSlots].sort((a, b) =>
+      a.start_time.localeCompare(b.start_time)
+    );
+
+    selectedInfo.innerHTML = ordered
+      .map(s => `${s.start_time.slice(0,5)} - ${s.end_time.slice(0,5)}`)
+      .join("<br>");
+  }
+
+  // =============================
+  // API
+  // =============================
+  async function fetchAvailability(date) {
+    const url = `/availability?date=${encodeURIComponent(date)}`;
+    const res = await fetch(url, {
+      headers: { "X-Requested-With": "XMLHttpRequest" }
+    });
+    if (!res.ok) throw new Error("Error cargando disponibilidad");
+    return await res.json();
+  }
+
+  // =============================
+  // RENDER SLOTS
+  // =============================
+  async function renderSlots(date) {
+
+    selectedDate = date;
+    selectedSlots = [];
+    updateSelectedInfo();
+    updateContinueButton();
+
+    if (slotsHint) slotsHint.textContent = `Para el día ${date}`;
+    if (!slotsContainer) return;
+
+    slotsContainer.innerHTML = "Cargando franjas...";
+
+    let data;
+    try {
+      data = await fetchAvailability(date);
+    } catch (e) {
+      slotsContainer.innerHTML = "Error cargando franjas";
+      return;
+    }
+
+    const slots = data.slots || [];
     slotsContainer.innerHTML = "";
 
-    // Crear un botón por cada hora
-    slots.forEach(time => {
+    if (slots.length === 0) {
+      slotsContainer.innerHTML = "No hay franjas disponibles";
+      return;
+    }
+
+    slots.forEach(slot => {
+
+      // =============================
+      // BLOQUEAR HORAS PASADAS HOY
+      // =============================
+      let isPast = false;
+
+      if (date === formatToday()) {
+        const now = new Date();
+        const nowMinutes = now.getHours() * 60 + now.getMinutes();
+
+        const [h, m] = slot.start_time.split(":");
+        const slotMinutes = parseInt(h) * 60 + parseInt(m);
+
+        if (slotMinutes <= nowMinutes) {
+          isPast = true;
+        }
+      }
+
+      // =============================
+      // BOTÓN
+      // =============================
       const btn = document.createElement("button");
-      btn.className = "slot";
-      btn.textContent = time;
+      btn.type = "button";
+      btn.classList.add("slot");
+      btn.textContent =
+        `${slot.start_time.slice(0,5)} - ${slot.end_time.slice(0,5)}`;
 
-      const isBooked = reservedTimes.includes(time);
+      // slot sin recursos
+      if (slot.disabled) {
+        btn.disabled = true;
+        btn.classList.add("booked");
+      }
 
-      // Si está ocupada, marcamos el botón y lo dejamos sin acción
-      if (isBooked) btn.classList.add("booked");
+      // slot pasado por hora
+      if (isPast) {
+        btn.disabled = true;
+        btn.classList.add("booked");
+      }
 
-      btn.onclick = () => {
-        if (isBooked) return; // no se puede seleccionar si ya está reservada
+      btn.addEventListener("click", () => {
 
-        clearActiveSlots();
-        btn.classList.add("active");
+        const slotId = slot.slot_id;
+        const idx = selectedSlots.findIndex(s => s.slot_id === slotId);
 
-        selectedInfo.textContent = `Reserva seleccionada: ${date} a las ${time}`;
-        alert(`Tenemos que enviar esta reserva a la base de datos. ${date} a las ${time}`);
-      };
+        if (idx !== -1) {
+          selectedSlots.splice(idx, 1);
+          btn.classList.remove("active");
+        } else {
+          selectedSlots.push({
+            slot_id: slotId,
+            start_time: slot.start_time,
+            end_time: slot.end_time
+          });
+          btn.classList.add("active");
+        }
+
+        updateSelectedInfo();
+        updateContinueButton();
+      });
 
       slotsContainer.appendChild(btn);
     });
-
-    //Texto de arriba
-    slotsHint.textContent = date ? `Para el día ${date}` : "—";
   }
 
-  // Pone el datePicker en la fecha de hoy y renderiza las horas
-  function setTodayAndRender() {
-    const today = new Date();
-    const yyyy = today.getFullYear();
-    const mm = String(today.getMonth() + 1).padStart(2, "0"); //+1 porque da el mes del 0 al 11 y padStart es que tenga 2 digitos y rellene con 0
-    const dd = String(today.getDate()).padStart(2, "0");
-    const formatted = `${yyyy}-${mm}-${dd}`;
+  // =============================
+  // CONTINUAR
+  // =============================
+  if (btnContinue) {
+    btnContinue.addEventListener("click", () => {
 
-    datePicker.value = formatted;
-    renderSlots(formatted);
+      if (!USER_ID || !selectedDate || selectedSlots.length === 0) return;
+
+      const ids = [...selectedSlots]
+        .sort((a,b) => a.start_time.localeCompare(b.start_time))
+        .map(s => s.slot_id)
+        .join(",");
+
+      const url =
+        `/Profesors/listado/${USER_ID}?date=${encodeURIComponent(selectedDate)}&slots=${encodeURIComponent(ids)}`;
+
+      window.location.href = url;
+    });
   }
 
-  // Cada vez que el usuario cambie la fecha:
+  // =============================
+  // INIT
+  // =============================
+  if (!datePicker || !slotsContainer) return;
+
+  // Bloquea calendario días pasados
+  datePicker.min = formatToday();
+
+  // Valor inicial
+  datePicker.value = formatToday();
+  renderSlots(datePicker.value);
+
+  // Cambio por calendario
   datePicker.addEventListener("change", () => {
-    selectedInfo.textContent = "Selecciona una hora para ver tu reserva aquí.";
-    renderSlots(datePicker.value); //se generan las horas
-  });
 
-  // NAVEGACIÓN ENTRE VISTAS (Inicio / Mis reservas)
-  //Selecionamos del menu
-  const navBtns = document.querySelectorAll(".navbtn");
-  const views = document.querySelectorAll(".view");
+    const value = datePicker.value;
 
-  function setView(viewKey) {
-    // Oculta todas las vistas
-    views.forEach(v => v.classList.add("hidden"));
-
-    // Muestra solo la vista elegida
-    document.getElementById("view-" + viewKey).classList.remove("hidden");
-
-    // Marca el botón activo
-    navBtns.forEach(b => b.classList.remove("active"));
-    document.querySelector(`.navbtn[data-view="${viewKey}"]`)?.classList.add("active");
-
-    // Si entramos en "misreservas", renderizamos la tabla
-    if (viewKey === "misreservas") renderMisReservas();
-  }
-
-  // Click en botones de navegación
-  navBtns.forEach(btn => {
-    btn.addEventListener("click", () => setView(btn.dataset.view));
-  });
-
-   // "MIS RESERVAS" - TABLA Y ACCIONES
-  function renderMisReservas() {
-    const tbl = document.getElementById("tblMisReservas");
-
-    // Si no hay reservas
-    if (misReservas.length === 0) {
-      tbl.innerHTML = `
-        <thead><tr><th>Mis reservas</th></tr></thead>
-        <tbody>
-          <tr>
-            <td style="padding:1rem; color:var(--muted);">
-              No tienes reservas todavía.
-            </td>
-          </tr>
-        </tbody>
-      `;
+    if (isPastDate(value)) {
+      datePicker.value = formatToday();
+      renderSlots(formatToday());
       return;
     }
 
-    // Si hay reservas, construimos la tabla con map()
-    tbl.innerHTML = `
-      <thead>
-        <tr>
-          <th>ID</th>
-          <th>Tipo</th>
-          <th>Recurso</th>
-          <th>Fecha</th>
-          <th>Hora</th>
-          <th>Acciones</th>
-        </tr>
-      </thead>
-      <tbody>
-        ${misReservas
-          .map(r => `
-            <tr>
-              <td>${r.id}</td>
-              <td>${r.tipo}</td>
-              <td><b>${r.recurso}</b></td>
-              <td>${r.fecha}</td>
-              <td>${r.hora}</td>
-              <td>
-                <div class="actions">
-                  <button class="mini primary" onclick="openEdit(${r.id})">Modificar</button>
-                  <button class="mini danger" onclick="cancelReserva(${r.id})">Anular</button>
-                </div>
-              </td>
-            </tr>
-          `)
-          .join("")}
-      </tbody>
-    `;
-  }
+    renderSlots(value);
+  });
 
-  // Elimina una reserva por id
-  function cancelReserva(id) {
-    if (!confirm("¿Seguro que quieres anular esta reserva?")) return;
+  // Escritura manual
+  datePicker.addEventListener("input", () => {
 
-    misReservas = misReservas.filter(r => r.id !== id); //Recorre toda la array de reservas y se queda con todas excepto la que queremos borrar
-    renderMisReservas();
-  }
-
-  // MODAL PARA EDITAR RESERVA
-  let currentEditId = null;
-
-  // Abre el modal y precarga datos de la reserva
-  function openEdit(id) {
-    currentEditId = id;
-
-    const reserva = misReservas.find(r => r.id === id);
-    if (!reserva) return;
-
-    // Seteamos fecha
-    document.getElementById("editFecha").value = reserva.fecha;
-
-    // Cargamos select de horas
-    const horas = generateSlots();
-    const sel = document.getElementById("editHora");
-
-    sel.innerHTML = horas.map(h => `<option value="${h}">${h}</option>`).join("");
-    sel.value = reserva.hora;
-
-    // Mostrar modal
-    document.getElementById("modalEdit").classList.remove("hidden");
-  }
-
-  // Cierra modal
-  function closeModal() {
-    document.getElementById("modalEdit").classList.add("hidden");
-    currentEditId = null;
-  }
-
-  // Guarda cambios en la reserva editada
-  function saveEdit() {
-    const fecha = document.getElementById("editFecha").value;
-    const hora = document.getElementById("editHora").value;
-
-    if (!fecha || !hora) {
-      alert("Selecciona fecha y hora.");
-      return;
+    if (isPastDate(datePicker.value)) {
+      datePicker.value = formatToday();
     }
+  });
 
-    const r = misReservas.find(x => x.id === currentEditId);
-    if (!r) return;
-
-    r.fecha = fecha;
-    r.hora = hora;
-
-    closeModal();
-    renderMisReservas();
-    alert("Reserva modificada");
-  };
-
-  //Logout
-  function logout() {
-    window.location.href = "{{ route('home') }}";
-  }
-
-  if (logoutBtn) logoutBtn.addEventListener("click", logout);
-
-  //ARRANQUE INICIAL
-  setTodayAndRender();
-  setView("inicio");
+});
