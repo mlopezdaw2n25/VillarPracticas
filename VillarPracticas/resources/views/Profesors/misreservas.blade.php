@@ -101,38 +101,44 @@
 <!-- MODAL EDITAR -->
 <!-- ===================== -->
 <div id="modalEdit" style="display:none;
-  position:fixed; inset:0;
+  position:fixed;
+  inset:0;
   background:rgba(0,0,0,.45);
   align-items:center;
   justify-content:center;
-  z-index:999;">
+  z-index:999;
+  padding:1rem;">
 
-  <div style="background:#fff;width:min(560px,95%);border-radius:20px;padding:1.4rem;box-shadow:var(--shadow);">
+  <div style="background:#fff;
+              width:min(560px,95%);
+              border-radius:20px;
+              padding:1.6rem;
+              box-shadow:var(--shadow);
+              max-height:90vh;
+              overflow-y:auto;">
 
-    <h3 style="font-size:1.1rem;font-weight:900;">Modificar reserva</h3>
-    <p style="color:var(--muted);margin:.35rem 0 1rem;">
-      Cambia la fecha y/o la hora.
+    <h3 style="font-size:1.1rem;font-weight:800;">Modificar materiales</h3>
+
+    <p style="color:var(--muted);margin-bottom:1rem;">
+      Puedes modificar cantidades o poner 0 para eliminar el recurso.
     </p>
 
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:.8rem;">
-      <div>
-        <label>Nueva fecha</label>
-        <input type="date" id="editFecha">
-      </div>
+    <div id="editErrorBox" style="color:#b91c1c;font-weight:600;margin-bottom:.8rem;"></div>
 
-      <div>
-        <label>Nueva hora</label>
-        <select id="editHora"></select>
-      </div>
+    <div id="editItemsContainer"></div>
+
+    <div id="editLoading" style="display:none;text-align:center;margin-top:1rem;">
+      Guardando cambios...
     </div>
 
-    <div style="display:flex;gap:.6rem;justify-content:flex-end;margin-top:1.1rem;">
+    <div style="display:flex;gap:.6rem;justify-content:flex-end;margin-top:1.2rem;">
       <button class="mini" id="btnCancelEdit">Cancelar</button>
-      <button class="mini primary" id="btnSaveEdit">Guardar</button>
+      <button class="mini primary" id="btnSaveEdit">Guardar cambios</button>
     </div>
 
   </div>
 </div>
+
 
 <!-- VARIABLES -->
 <script>

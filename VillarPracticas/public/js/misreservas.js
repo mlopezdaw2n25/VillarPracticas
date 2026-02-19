@@ -1,37 +1,42 @@
 document.addEventListener("DOMContentLoaded", () => {
 
-  const userId = window.__USER_ID__ ?? null;
-
-  // TABLAS
   const tblMine = document.getElementById("tblMisReservas");
   const tblAll  = document.getElementById("tblAllReservas");
 
-  // MODAL
   const modal = document.getElementById("modalEdit");
-  const editFecha = document.getElementById("editFecha");
-  const editHora = document.getElementById("editHora");
   const btnCancelEdit = document.getElementById("btnCancelEdit");
   const btnSaveEdit = document.getElementById("btnSaveEdit");
+  const editItemsContainer = document.getElementById("editItemsContainer");
+  const editErrorBox = document.getElementById("editErrorBox");
+  const editLoading = document.getElementById("editLoading");
 
   let currentReservationId = null;
 
-  // CSRF
   const csrfToken =
     document.querySelector('meta[name="csrf-token"]')?.getAttribute("content");
 
-  // -------------------------
+  // =========================
+  // MODAL CONTROL
+  // =========================
+
   function openModal() {
-    modal.classList.remove("hidden");
+    modal.style.display = "flex";
   }
 
   function closeModal() {
-    modal.classList.add("hidden");
+    modal.style.display = "none";
     currentReservationId = null;
+    editItemsContainer.innerHTML = "";
+    editErrorBox.textContent = "";
+    editLoading.style.display = "none";
   }
 
   btnCancelEdit?.addEventListener("click", closeModal);
 
-  // -------------------------
+  // =========================
+  // HELPERS
+  // =========================
+
   function setMineEmpty(msg) {
     tblMine.innerHTML =
       `<tr><td style="padding:1rem;color:#6b7280;">${msg}</td></tr>`;
@@ -43,19 +48,8 @@ document.addEventListener("DOMContentLoaded", () => {
       `<tr><td style="padding:1rem;color:#6b7280;">${msg}</td></tr>`;
   }
 
-  // -------------------------
-  async function loadSlotsOptions() {
-    editHora.innerHTML = "";
-    for (let i = 1; i <= 20; i++) {
-      const opt = document.createElement("option");
-      opt.value = i;
-      opt.textContent = "Slot #" + i;
-      editHora.appendChild(opt);
-    }
-  }
-
   // =========================
-  // FETCH
+  // FETCH FUNCTIONS
   // =========================
 
   async function fetchMyReservations() {
@@ -66,7 +60,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
     const data = await res.json();
     if (!res.ok) throw new Error(data?.message || "Error cargando reservas");
-
     return data;
   }
 
@@ -80,7 +73,17 @@ document.addEventListener("DOMContentLoaded", () => {
 
     const data = await res.json();
     if (!res.ok) throw new Error(data?.message || "Error cargando todas");
+    return data;
+  }
 
+  async function fetchReservationDetail(id) {
+    const res = await fetch(`/api/reservations/${id}`, {
+      credentials: "same-origin",
+      headers: { "X-Requested-With": "XMLHttpRequest" }
+    });
+
+    const data = await res.json();
+    if (!res.ok) throw new Error(data?.message || "Error cargando detalle");
     return data;
   }
 
@@ -123,7 +126,10 @@ document.addEventListener("DOMContentLoaded", () => {
       </tbody>
     `;
 
+    // =========================
     // ANULAR
+    // =========================
+
     tblMine.querySelectorAll("[data-del]").forEach(btn => {
       btn.addEventListener("click", async () => {
 
@@ -149,13 +155,50 @@ document.addEventListener("DOMContentLoaded", () => {
       });
     });
 
+    // =========================
     // MODIFICAR
+    // =========================
+
     tblMine.querySelectorAll("[data-edit]").forEach(btn => {
       btn.addEventListener("click", async () => {
+
         currentReservationId = btn.dataset.edit;
-        editFecha.value = new Date().toISOString().slice(0,10);
-        await loadSlotsOptions();
-        openModal();
+
+        try {
+
+          editItemsContainer.innerHTML = "Cargando...";
+          editErrorBox.textContent = "";
+          openModal();
+
+          const data = await fetchReservationDetail(currentReservationId);
+
+          const items = data?.reservation?.items ?? [];
+
+          editItemsContainer.innerHTML = "";
+
+          if (items.length === 0) {
+            editItemsContainer.innerHTML = "<p>No hay recursos en esta reserva.</p>";
+            return;
+          }
+
+          items.forEach(item => {
+            editItemsContainer.innerHTML += `
+              <div style="margin-bottom:1rem;">
+                <strong>${item.name}</strong><br>
+                <input type="number"
+                  data-resource="${item.resource_id}"
+                  min="0"
+                  value="${item.quantity}"
+                  style="width:120px;padding:.4rem;">
+              </div>
+            `;
+          });
+
+        } catch (e) {
+          console.error(e);
+          editErrorBox.textContent = "No se pudo cargar la reserva";
+        }
+
       });
     });
   }
@@ -200,37 +243,57 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   // =========================
-  // GUARDAR MODIFICACIÓN
+  // GUARDAR CAMBIOS
   // =========================
 
   btnSaveEdit?.addEventListener("click", async () => {
 
     if (!currentReservationId) return;
 
-    const payload = {
-      date: editFecha.value,
-      time_slot_id: parseInt(editHora.value, 10)
-    };
+    editErrorBox.textContent = "";
+    editLoading.style.display = "block";
 
-    const res = await fetch(`/api/reservations/${currentReservationId}`, {
-      method: "PUT",
-      credentials: "same-origin",
-      headers: {
-        "Content-Type": "application/json",
-        "X-CSRF-TOKEN": csrfToken,
-        "X-Requested-With": "XMLHttpRequest"
-      },
-      body: JSON.stringify(payload)
+    const inputs = document.querySelectorAll("#editItemsContainer input");
+
+    const items = [];
+
+    inputs.forEach(input => {
+      const qty = parseInt(input.value) || 0;
+      items.push({
+        resource_id: parseInt(input.dataset.resource),
+        quantity: qty
+      });
     });
 
-    const out = await res.json();
-    if (!res.ok) {
-      alert(out?.message || "Error al modificar");
-      return;
+    try {
+
+      const res = await fetch(`/api/reservations/${currentReservationId}/items`, {
+        method: "PUT",
+        credentials: "same-origin",
+        headers: {
+          "Content-Type": "application/json",
+          "X-CSRF-TOKEN": csrfToken,
+          "X-Requested-With": "XMLHttpRequest"
+        },
+        body: JSON.stringify({ items })
+      });
+
+      const out = await res.json();
+
+      if (!res.ok) {
+        editLoading.style.display = "none";
+        editErrorBox.textContent = out?.message || "Error al modificar";
+        return;
+      }
+
+      closeModal();
+      init();
+
+    } catch (e) {
+      editLoading.style.display = "none";
+      editErrorBox.textContent = "Error de conexión";
     }
 
-    closeModal();
-    init();
   });
 
   // =========================

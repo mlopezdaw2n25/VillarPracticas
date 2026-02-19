@@ -1,19 +1,39 @@
-Hola {{ $data['user_name'] }},
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+</head>
+<body style="font-family: Arial, sans-serif;">
 
-Tu reserva se ha creado correctamente.
+    <h2>Confirmación de reserva</h2>
 
-Fecha: {{ $data['date'] }}
+    Hola {{ $user->display_name ?? 'Usuario' }},
 
-Franjas horarias:
-@foreach($data['slots'] as $slot)
-- {{ $slot }}
-@endforeach
 
-Recursos:
-@foreach($data['items'] as $item)
-- {{ $item }}
-@endforeach
+    <p>Tu reserva se ha creado correctamente con los siguientes datos:</p>
 
-Gracias por utilizar Centre Villar.
+    <p><strong>Fecha:</strong> {{ $date }}</p>
 
-Un saludo.
+    @foreach($reservations as $reservation)
+
+        <hr>
+
+        <p><strong>Franja horaria:</strong> {{ $reservation['slot_time'] }}</p>
+
+        <ul>
+            @foreach($reservation['items'] as $item)
+                <li>
+                    {{ $item['name'] }} x {{ $item['quantity'] }}
+                </li>
+            @endforeach
+        </ul>
+
+    @endforeach
+
+    <hr>
+
+    <p>Gracias por utilizar el sistema de reservas.</p>
+    <p><strong>Centre Villar</strong></p>
+
+</body>
+</html>
