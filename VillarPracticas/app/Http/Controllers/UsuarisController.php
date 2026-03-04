@@ -68,8 +68,18 @@ public function VistaProfes($id)
     return view('Profesors/profesor', ['id' => $id, 'profesor' => $profesor]);
 }
 
-public function VistaListado($id){
-    return view('Profesors.listado', ['id' => $id]);
+public function VistaListado(Request $request, $id)
+{
+    if (session('rol') !== 'profe') {
+        return redirect('/')->with('error', 'No tens permisos');
+    }
+
+    if ((int)$id !== (int)session('usuari_id')) {
+        return redirect('/')->with('error', 'No tens permisos');
+    }
+
+    return redirect('/listado?date=' . $request->query('date')
+        . '&slots=' . $request->query('slots'));
 }
 public function VistaAdmin($id)
 {

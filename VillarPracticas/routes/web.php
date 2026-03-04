@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\UsuarisController;
+use App\Http\Controllers\ListadoController;
 use App\Http\Controllers\Api\AvailabilityController;
 use App\Http\Controllers\Api\ListadoDataController;
 use App\Http\Controllers\Api\ReservationController;
@@ -22,32 +23,35 @@ Route::get('/logout', [UsuarisController::class, 'logout'])->name('logout');
 // SOLO USUARIOS LOGUEADOS
 Route::middleware([CheckLogin::class])->group(function () {
 
-    // SOLO PROFESOR
     Route::middleware([CheckProfe::class])->group(function () {
+
+        Route::get('/listado', [ListadoController::class, 'index']);
 
         // VISTAS
         Route::get('Profesors/profesor/{id}', [UsuarisController::class, 'VistaProfes']);
         Route::get('Profesors/listado/{id}', [UsuarisController::class, 'VistaListado']);
         Route::get('Profesors/misreservas/{id}', [UsuarisController::class, 'VistaMisReservas']);
 
-        // ENDPOINTS (CON SESION + CSRF)
+        // ENDPOINTS
         Route::get('/availability', [AvailabilityController::class, 'index']);
         Route::get('/listado-data', [ListadoDataController::class, 'index']);
         Route::post('/reservations', [ReservationController::class, 'store']);
 
-        // Mis reservas (API)
+        // MIS RESERVAS API
         Route::get('/my-reservations', [MyReservationsController::class, 'index']);
         Route::put('/reservations/{id}', [MyReservationsController::class, 'update']);
-        Route::delete('/reservations/{id}', [MyReservationsController::class, 'destroy']);
-        });
 
-    // SOLO ADMIN
+        // 👇 ESTAS DOS VAN AQUÍ
+        Route::delete('/reservations/{id}', [ReservationController::class, 'destroy']);
+        Route::post('/reservations/{id}/confirm-return', [ReservationController::class, 'confirmReturn']);
+
+    });
+
     Route::middleware([CheckAdmin::class])->group(function () {
         Route::get('Profesors/admin/{id}', [UsuarisController::class, 'VistaAdmin']);
     });
-});
 
-Route::delete('/reservations/{id}', [ReservationController::class, 'destroy']);
+});
 
 Route::get('/time-test', function () {
     return now()->toDateTimeString();

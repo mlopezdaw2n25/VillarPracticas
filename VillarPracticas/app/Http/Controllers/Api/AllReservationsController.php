@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\DB;
+use Carbon\Carbon;
 
 class AllReservationsController extends Controller
 {
@@ -21,7 +22,9 @@ class AllReservationsController extends Controller
             ->leftJoin('resources as res', 'res.id', '=', 'ri.resource_id')
             ->select(
                 'r.id',
+                'r.user_id',
                 'r.date',
+                'r.status',
                 'ts.start_time',
                 'ts.end_time',
                 'u.nom as user_name',
@@ -37,12 +40,31 @@ class AllReservationsController extends Controller
 
         foreach ($rows as $row) {
             if (!isset($grouped[$row->id])) {
+                $status = $row->status;
+
+                // Igual que en "Mis reservas": si ha pasado la hora fin y sigue activa,
+                // la pasamos a pendiente_devolucion para que deje de contar como activa.
+                if ($status === 'activa') {
+                    $reservationEnd = Carbon::parse($row->date . ' ' . $row->end_time);
+                    if (now()->greaterThan($reservationEnd)) {
+                        DB::table('reservations')
+                            ->where('id', $row->id)
+                            ->where('status', 'activa')
+                            ->update([
+                                'status' => 'pendiente_devolucion',
+                                'updated_at' => now(),
+                            ]);
+                        $status = 'pendiente_devolucion';
+                    }
+                }
+
                 $grouped[$row->id] = [
                     'id' => $row->id,
                     'date' => $row->date,
                     'start_time' => $row->start_time,
                     'end_time' => $row->end_time,
                     'user' => $row->user_name,
+                    'status' => $status,
                     'items' => []
                 ];
             }

@@ -51,6 +51,45 @@ class ListadoDataController extends Controller
                 ])
                 ->get();
 
+            $resourceIds = $totals->pluck('id')->map(fn ($v) => (int) $v)->all();
+
+            // Última devolución finalizada por recurso (si existe)
+            $lastReturnsMap = collect();
+
+            if (!empty($resourceIds)) {
+                $latestByResource = DB::table('reservation_items as ri')
+                    ->join('reservations as r', 'r.id', '=', 'ri.reservation_id')
+                    ->where('r.status', 'finalizada')
+                    ->whereIn('ri.resource_id', $resourceIds)
+                    ->select([
+                        'ri.resource_id',
+                        DB::raw('MAX(r.updated_at) as last_return_at'),
+                    ])
+                    ->groupBy('ri.resource_id');
+
+                $lastReturns = DB::table('reservation_items as ri')
+                    ->join('reservations as r', 'r.id', '=', 'ri.reservation_id')
+                    ->joinSub($latestByResource, 'lr', function ($join) {
+                        $join->on('lr.resource_id', '=', 'ri.resource_id')
+                            ->on('lr.last_return_at', '=', 'r.updated_at');
+                    })
+                    ->where('r.status', 'finalizada')
+                    ->whereIn('ri.resource_id', $resourceIds)
+                    ->select([
+                        'ri.resource_id',
+                        'r.return_defectuoso',
+                        'r.updated_at as last_return_at',
+                    ])
+                    ->get();
+
+                $lastReturnsMap = $lastReturns
+                    ->groupBy('resource_id')
+                    ->map(function ($rows) {
+                        // Si por casualidad hay duplicados, nos quedamos con el más reciente
+                        return $rows->sortByDesc('last_return_at')->first();
+                    });
+            }
+
             // Reservados ya en esa fecha/franja
             $reserved = DB::table('reservation_items as ri')
                 ->join('reservations as r', 'r.id', '=', 'ri.reservation_id')
@@ -61,15 +100,22 @@ class ListadoDataController extends Controller
                 ->pluck('reserved_units', 'resource_id');
 
             // remaining = total - reservado
-            $resources = $totals->map(function ($row) use ($reserved) {
+            $resources = $totals->map(function ($row) use ($reserved, $lastReturnsMap) {
                 $already = (int) ($reserved[$row->id] ?? 0);
                 $remaining = max((int)$row->available_units - $already, 0);
+
+                $last = $lastReturnsMap->get((int) $row->id);
+                $lastDefectuoso = $last ? (bool) $last->return_defectuoso : null;
 
                 return [
                     'id' => (int)$row->id,
                     'name' => $row->name,
                     'type' => $row->type,
                     'remaining' => $remaining,
+                    'last_return_defectuoso' => $lastDefectuoso,
+                    'last_return_status' => $lastDefectuoso === null
+                        ? null
+                        : ($lastDefectuoso ? 'con_incidencia' : 'sin_incidencias'),
                 ];
             })->values();
 

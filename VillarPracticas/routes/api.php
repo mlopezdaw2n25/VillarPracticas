@@ -75,4 +75,7 @@ Route::middleware(['web'])->group(function () {
 
     // Actualizar materiales de una reserva
     Route::put('/reservations/{id}/items', [ReservationController::class, 'updateItems']);
-});
+
+    Route::put('/reservations/{id}/confirm-return', [ReservationController::class, 'confirmReturn']);
+
+    });

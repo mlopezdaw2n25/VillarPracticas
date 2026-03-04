@@ -9,7 +9,6 @@ use Illuminate\Validation\ValidationException;
 use Illuminate\Support\Facades\Mail;
 use App\Mail\ReservationCreatedMail;
 use App\Models\usuaris;
-use Carbon\Carbon;
 
 class ReservationController extends Controller
 {
@@ -76,12 +75,13 @@ class ReservationController extends Controller
 
                     $totalAvailable = (int) $slotResources[$resourceId]->available_units;
 
+                    // 🔥 SOLO BLOQUEAN LAS ACTIVAS
                     $alreadyReserved = (int) DB::table('reservation_items as ri')
                         ->join('reservations as r', 'r.id', '=', 'ri.reservation_id')
                         ->where('r.date', $date)
                         ->where('r.time_slot_id', $slotId)
+                        ->where('r.status', 'activa')
                         ->where('ri.resource_id', $resourceId)
-                        ->lockForUpdate()
                         ->sum('ri.quantity');
 
                     $remaining = $totalAvailable - $alreadyReserved;
@@ -97,6 +97,8 @@ class ReservationController extends Controller
                     'user_id' => $userId,
                     'date' => $date,
                     'time_slot_id' => $slotId,
+                    'status' => 'activa',
+                    'return_defectuoso' => false,
                     'created_at' => now(),
                     'updated_at' => now(),
                 ]);
@@ -177,7 +179,7 @@ class ReservationController extends Controller
     }
 
     /* ======================================================
-       ELIMINAR RESERVA
+       SOLICITAR DEVOLUCIÓN
     ====================================================== */
 
     public function destroy($id)
@@ -188,37 +190,40 @@ class ReservationController extends Controller
             return response()->json(['ok' => false], 401);
         }
 
-        return DB::transaction(function () use ($id, $userId) {
+        $reservation = DB::table('reservations')
+            ->where('id', $id)
+            ->where('user_id', $userId)
+            ->first();
 
-            $reservation = DB::table('reservations')
-                ->where('id', $id)
-                ->where('user_id', $userId)
-                ->first();
+        if (!$reservation) {
+            return response()->json(['ok' => false], 404);
+        }
 
-            if (!$reservation) {
-                return response()->json(['ok' => false], 404);
-            }
-
-            DB::table('reservation_items')
-                ->where('reservation_id', $id)
-                ->delete();
-
-            DB::table('reservations')
-                ->where('id', $id)
-                ->delete();
-
+        if ($reservation->status !== 'activa') {
             return response()->json([
-                'ok' => true,
-                'message' => 'Reserva anulada correctamente'
+                'ok' => false,
+                'message' => 'Solo reservas activas pueden devolverse.'
+            ], 400);
+        }
+
+        DB::table('reservations')
+            ->where('id', $id)
+            ->update([
+                'status' => 'pendiente_devolucion',
+                'updated_at' => now()
             ]);
-        });
+
+        return response()->json([
+            'ok' => true,
+            'message' => 'Devolución solicitada correctamente.'
+        ]);
     }
 
     /* ======================================================
-       MODIFICAR ITEMS (DEVUELVE STOCK AUTOMÁTICO)
+       CONFIRMAR DEVOLUCIÓN
     ====================================================== */
 
-    public function updateItems(Request $request, $id)
+    public function confirmReturn(Request $request, $id)
     {
         $userId = session('usuari_id');
 
@@ -227,98 +232,43 @@ class ReservationController extends Controller
         }
 
         $validated = $request->validate([
-            'items' => ['required', 'array'],
-            'items.*.resource_id' => ['required', 'integer', 'exists:resources,id'],
-            'items.*.quantity' => ['required', 'integer', 'min:0'],
+            'incident' => ['required', 'boolean'],
+            'comment'  => ['nullable', 'string']
         ]);
 
-        return DB::transaction(function () use ($id, $userId, $validated) {
+        $reservation = DB::table('reservations')
+            ->where('id', $id)
+            ->where('user_id', $userId)
+            ->first();
 
-            $reservation = DB::table('reservations')
-                ->where('id', $id)
-                ->where('user_id', $userId)
-                ->first();
+        if (!$reservation) {
+            return response()->json(['ok' => false], 404);
+        }
 
-            if (!$reservation) {
-                return response()->json(['ok' => false], 404);
-            }
-
-            $slot = DB::table('time_slots')
-                ->where('id', $reservation->time_slot_id)
-                ->first();
-
-            $reservationStart = Carbon::parse(
-                $reservation->date . ' ' . $slot->start_time
-            );
-
-            if (now()->greaterThanOrEqualTo($reservationStart)) {
-                return response()->json([
-                    'ok' => false,
-                    'message' => 'La franja ya ha comenzado.'
-                ], 400);
-            }
-
-            foreach ($validated['items'] as $item) {
-
-                $resourceId = $item['resource_id'];
-                $newQty = (int) $item['quantity'];
-
-                if ($newQty === 0) {
-                    DB::table('reservation_items')
-                        ->where('reservation_id', $id)
-                        ->where('resource_id', $resourceId)
-                        ->delete();
-                    continue;
-                }
-
-                $slotResource = DB::table('slot_resources')
-                    ->where('time_slot_id', $reservation->time_slot_id)
-                    ->where('resource_id', $resourceId)
-                    ->first();
-
-                if (!$slotResource) continue;
-
-                $totalAvailable = (int) $slotResource->available_units;
-
-                $alreadyReserved = (int) DB::table('reservation_items as ri')
-                    ->join('reservations as r', 'r.id', '=', 'ri.reservation_id')
-                    ->where('r.date', $reservation->date)
-                    ->where('r.time_slot_id', $reservation->time_slot_id)
-                    ->where('ri.resource_id', $resourceId)
-                    ->where('ri.reservation_id', '!=', $id)
-                    ->sum('ri.quantity');
-
-                $remaining = $totalAvailable - $alreadyReserved;
-
-                if ($newQty > $remaining) {
-                    return response()->json([
-                        'ok' => false,
-                        'message' => 'Stock insuficiente.'
-                    ], 400);
-                }
-
-                DB::table('reservation_items')
-                    ->updateOrInsert(
-                        [
-                            'reservation_id' => $id,
-                            'resource_id' => $resourceId
-                        ],
-                        [
-                            'quantity' => $newQty,
-                            'updated_at' => now()
-                        ]
-                    );
-            }
-
+        if ($reservation->status !== 'pendiente_devolucion') {
             return response()->json([
-                'ok' => true,
-                'message' => 'Reserva actualizada correctamente'
+                'ok' => false,
+                'message' => 'La reserva no está pendiente de devolución.'
+            ], 400);
+        }
+
+        DB::table('reservations')
+            ->where('id', $id)
+            ->update([
+                'status' => 'finalizada',
+                'return_defectuoso' => $validated['incident'],
+                'return_comentario' => $validated['comment'],
+                'updated_at' => now()
             ]);
-        });
+
+        return response()->json([
+            'ok' => true,
+            'message' => 'Reserva finalizada correctamente.'
+        ]);
     }
 
     /* ======================================================
-       MOSTRAR RESERVA (PARA MODAL)
+       MOSTRAR RESERVA
     ====================================================== */
 
     public function show($id)
@@ -350,8 +300,155 @@ class ReservationController extends Controller
                 'id' => $reservation->id,
                 'date' => $reservation->date,
                 'time_slot_id' => $reservation->time_slot_id,
+                'status' => $reservation->status,
+                'return_defectuoso' => $reservation->return_defectuoso,
+                'return_comentario' => $reservation->return_comentario,
                 'items' => $items
             ]
         ]);
+    }
+
+    /* ======================================================
+       ACTUALIZAR MATERIALES (CANTIDADES)
+    ====================================================== */
+
+    public function updateItems(Request $request, $id)
+    {
+        $userId = session('usuari_id');
+
+        if (!$userId) {
+            return response()->json(['ok' => false], 401);
+        }
+
+        $validated = $request->validate([
+            'items' => ['required', 'array', 'min:1'],
+            'items.*.resource_id' => ['required', 'integer', 'exists:resources,id'],
+            'items.*.quantity' => ['required', 'integer', 'min:1'],
+        ]);
+
+        $reservation = DB::table('reservations')
+            ->where('id', $id)
+            ->where('user_id', $userId)
+            ->first();
+
+        if (!$reservation) {
+            return response()->json(['ok' => false], 404);
+        }
+
+        if ($reservation->status !== 'activa') {
+            return response()->json([
+                'ok' => false,
+                'message' => 'Solo reservas activas pueden modificarse.'
+            ], 400);
+        }
+
+        $items = collect($validated['items'])
+            ->map(function ($i) {
+                return [
+                    'resource_id' => (int) $i['resource_id'],
+                    'quantity' => (int) $i['quantity'],
+                ];
+            })
+            ->values();
+
+        // Evita duplicados de resource_id en el payload
+        if ($items->count() !== $items->pluck('resource_id')->unique()->count()) {
+            throw ValidationException::withMessages([
+                'items' => ['No se permiten recursos duplicados.']
+            ]);
+        }
+
+        $existingIds = DB::table('reservation_items')
+            ->where('reservation_id', $id)
+            ->pluck('resource_id')
+            ->map(fn ($v) => (int) $v)
+            ->values();
+
+        if ($existingIds->isEmpty()) {
+            return response()->json([
+                'ok' => false,
+                'message' => 'La reserva no tiene recursos para modificar.'
+            ], 400);
+        }
+
+        $incomingIds = $items->pluck('resource_id')->sort()->values();
+        $existingSorted = $existingIds->sort()->values();
+
+        if ($incomingIds->count() !== $existingSorted->count() || $incomingIds->values()->all() !== $existingSorted->values()->all()) {
+            throw ValidationException::withMessages([
+                'items' => ['Solo puedes modificar cantidades; no puedes añadir ni eliminar recursos.']
+            ]);
+        }
+
+        return DB::transaction(function () use ($reservation, $id, $items) {
+            $slotId = (int) $reservation->time_slot_id;
+            $date = $reservation->date;
+
+            // Bloqueamos stock del slot para los recursos implicados
+            $slotResources = DB::table('slot_resources')
+                ->where('time_slot_id', $slotId)
+                ->whereIn('resource_id', $items->pluck('resource_id')->all())
+                ->lockForUpdate()
+                ->get()
+                ->keyBy('resource_id');
+
+            if ($slotResources->isEmpty()) {
+                throw ValidationException::withMessages([
+                    'items' => ['No hay stock configurado para esta franja.']
+                ]);
+            }
+
+            foreach ($items as $item) {
+                $resourceId = (int) $item['resource_id'];
+                $qty = (int) $item['quantity'];
+
+                if (!$slotResources->has($resourceId)) {
+                    throw ValidationException::withMessages([
+                        'items' => ["El recurso $resourceId no está disponible en esta franja."]
+                    ]);
+                }
+
+                $totalAvailable = (int) $slotResources[$resourceId]->available_units;
+
+                // Stock ocupado por OTRAS reservas activas (excluimos la actual)
+                $reservedByOthers = (int) DB::table('reservation_items as ri')
+                    ->join('reservations as r', 'r.id', '=', 'ri.reservation_id')
+                    ->where('r.date', $date)
+                    ->where('r.time_slot_id', $slotId)
+                    ->where('r.status', 'activa')
+                    ->where('ri.resource_id', $resourceId)
+                    ->where('r.id', '!=', $id)
+                    ->sum('ri.quantity');
+
+                $remaining = $totalAvailable - $reservedByOthers;
+
+                if ($qty > $remaining) {
+                    throw ValidationException::withMessages([
+                        'items' => ["Stock insuficiente para el recurso $resourceId. Quedan $remaining."]
+                    ]);
+                }
+            }
+
+            foreach ($items as $item) {
+                DB::table('reservation_items')
+                    ->where('reservation_id', $id)
+                    ->where('resource_id', (int) $item['resource_id'])
+                    ->update([
+                        'quantity' => (int) $item['quantity'],
+                        'updated_at' => now(),
+                    ]);
+            }
+
+            DB::table('reservations')
+                ->where('id', $id)
+                ->update([
+                    'updated_at' => now(),
+                ]);
+
+            return response()->json([
+                'ok' => true,
+                'message' => 'Reserva modificada correctamente.'
+            ]);
+        });
     }
 }

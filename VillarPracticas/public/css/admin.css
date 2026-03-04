@@ -637,3 +637,56 @@
   }
 
 }
+
+/* ===================================================== */
+/* ============ ADMIN RESPONSIVE USABLE ================= */
+/* ===================================================== */
+/* En móvil/tablet no ocultamos navegación: la convertimos en barra horizontal desplazable */
+@media (max-width: 1000px) {
+
+  .layout {
+    flex-direction: column;
+  }
+
+  .side-navbar {
+    display: flex !important;
+    width: 100% !important;
+    border-right: none !important;
+    border-bottom: 1px solid rgba(229, 231, 235, .75);
+    padding: .75rem .75rem !important;
+
+    position: sticky;
+    top: 64px; /* debajo de navbar */
+    z-index: 30;
+
+    flex-direction: row;
+    gap: .55rem;
+    overflow-x: auto;
+    overflow-y: hidden;
+    white-space: nowrap;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .side-navbar h3 {
+    display: none;
+  }
+
+  .navbtn {
+    width: auto;
+    margin: 0;
+    flex: 0 0 auto;
+    white-space: nowrap;
+    padding: .65rem .8rem;
+    border-radius: 999px;
+    font-size: .9rem;
+  }
+
+  .content {
+    padding: 1.1rem .9rem 2rem;
+  }
+
+  /* Tablas siempre scroll horizontal */
+  table {
+    min-width: 720px;
+  }
+}

@@ -335,3 +335,59 @@ tr:hover td{
   }
 
 }
+
+/* ========================================================= */
+/* === SIDEBAR COMO BARRA INFERIOR (IGUAL QUE INICIO) ======= */
+/* ========================================================= */
+@media (max-width: 900px){
+
+  .layout{
+    flex-direction:column;
+  }
+
+  /* Sidebar pasa a barra inferior */
+  .side-navbar{
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: 70px;
+
+    flex-direction: row;
+    justify-content: space-around;
+    align-items: center;
+
+    padding: .5rem;
+    border-right: none;
+    border-top: 1px solid var(--border);
+    z-index: 50;
+  }
+
+  .side-navbar h3{
+    display:none;
+  }
+
+  .side-navbar button{
+    margin:0;
+    width:auto;
+    flex-direction:column;
+    font-size:.75rem;
+    padding:.6rem .9rem;
+  }
+
+  .bottom-actions{
+    margin-top:0;
+    flex-direction:row;
+    gap:.5rem;
+  }
+
+  /* Espacio para la barra inferior */
+  .content{
+    padding-bottom:100px;
+  }
+
+  /* Tablas: evitar que rompan el layout */
+  table{
+    min-width: 650px;
+  }
+}

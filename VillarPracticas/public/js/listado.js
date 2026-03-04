@@ -14,8 +14,15 @@
     .querySelector('meta[name="csrf-token"]')
     ?.getAttribute("content");
 
+  // Hay 7 imágenes (img1.png ... img7.png) en /public/img.
+  const GALLERY_IMAGE_COUNT = 7;
+
   // state => { slotId: { resourceId: qty } }
   const state = {};
+
+  // Guardamos los datos del servidor para usarlos en el resumen
+  let slotsData = {};
+  let resourcesData = {};
 
   /* ============================
      HELPERS
@@ -45,10 +52,23 @@
 
       totalItems += items.reduce((a, [, q]) => a + q, 0);
 
+      // Obtener info del slot
+      const slotInfo = slotsData[slotId] || {};
+      const slotTime = slotInfo.start_time && slotInfo.end_time 
+        ? `${slotInfo.start_time.slice(0,5)} - ${slotInfo.end_time.slice(0,5)}`
+        : `Slot ${slotId}`;
+
+      // Construir descripción de items con nombres descriptivos
+      const itemsDesc = items.map(([rid, q]) => {
+        const resourceInfo = resourcesData[rid] || {};
+        const resourceName = resourceInfo.name || `Recurso ${rid}`;
+        return `${resourceName} x ${q}`;
+      }).join(", ");
+
       lines.push(`
         <div>
-          <strong>Slot ${slotId}</strong>: 
-          ${items.map(([rid, q]) => `R${rid} x ${q}`).join(", ")}
+          <strong>${slotTime}</strong>: 
+          ${itemsDesc}
         </div>
       `);
     });
@@ -68,26 +88,35 @@
      GALERIA VISUAL
   ============================ */
 
-  function createOrUpdateGalleryItem(res, index) {
+  function createOrUpdateGalleryItem(res) {
 
     if (!gallery) return;
 
     let el = document.getElementById("gal_" + res.id);
 
-    if (!el) {
+    // 🔥 IMAGEN DIFERENTE POR RECURSO:
+    // usamos el id del recurso para elegir siempre
+    // la misma miniatura, independientemente de la franja.
+    const base = parseInt(res.id, 10) || 1;
+    const imgIndex = ((base - 1) % GALLERY_IMAGE_COUNT) + 1;
+    const src = `/img/img${imgIndex}.png`;
 
+    if (!el) {
       el = document.createElement("div");
       el.id = "gal_" + res.id;
       el.className = "resource-thumb";
-
-      // 🔥 IMAGEN DIFERENTE POR ORDEN
-      const imgIndex = index + 1;
-
-      el.innerHTML = `
-        <img src="/img/img${imgIndex}.png" alt="${res.name}">
-      `;
-
+      el.innerHTML = `<img src="${src}" alt="${res.name}">`;
       gallery.appendChild(el);
+      return;
+    }
+
+    // Si ya existe (por varias franjas), actualizamos la imagen igualmente.
+    const img = el.querySelector("img");
+    if (img) {
+      img.src = src;
+      img.alt = res.name;
+    } else {
+      el.innerHTML = `<img src="${src}" alt="${res.name}">`;
     }
   }
 
@@ -126,12 +155,63 @@
      UI BUILDERS
   ============================ */
 
-  function resourceCard(res, slotId, index) {
+  function resourceCard(res, slotId) {
 
-    createOrUpdateGalleryItem(res, index);
+    createOrUpdateGalleryItem(res);
 
     const id = `qty_${slotId}_${res.id}`;
     const badge = res.type === "space" ? "Espacio" : "Material";
+    const hasKnownReturnInfo =
+      res.last_return_defectuoso !== undefined &&
+      res.last_return_defectuoso !== null ||
+      res.last_return_status !== undefined &&
+      res.last_return_status !== null;
+
+    const hasIncident =
+      res.last_return_defectuoso === true ||
+      res.last_return_defectuoso === 1 ||
+      res.last_return_defectuoso === "1" ||
+      res.last_return_status === "con_incidencia" ||
+      // compatibilidad con posibles campos antiguos
+      res.last_incident_status === "incidencia" ||
+      res.last_incident_status === "con_incidencia" ||
+      res.last_incident === true ||
+      res.last_incident === 1 ||
+      res.last_incident === "1";
+
+    // Verde por defecto
+    let incidentCircle = `
+      <span
+        title="${hasKnownReturnInfo ? "Última devolución sin incidencias" : "Sin devoluciones registradas"}"
+        style="
+          display:inline-block;
+          width:10px;
+          height:10px;
+          border-radius:999px;
+          background:#22c55e;
+          margin-left:.35rem;
+          vertical-align:middle;
+        ">
+      </span>
+    `;
+
+    // Solo si el backend marca incidencia, lo ponemos rojo
+    if (hasIncident) {
+      incidentCircle = `
+        <span
+          title="Última devolución con incidencia"
+          style="
+            display:inline-block;
+            width:10px;
+            height:10px;
+            border-radius:999px;
+            background:#ef4444;
+            margin-left:.35rem;
+            vertical-align:middle;
+          ">
+        </span>
+      `;
+    }
 
     return `
       <div style="border:1px solid var(--border);
@@ -148,7 +228,7 @@
           <div>
             <div style="font-weight:700;">${res.name}</div>
             <div style="font-size:.82rem;opacity:.7;">
-              ${badge} - disponibles: <strong>${res.remaining}</strong>
+              ${badge} - disponibles: <strong>${res.remaining}</strong>${incidentCircle}
             </div>
           </div>
 
@@ -174,7 +254,7 @@
 
     const list = resources
       .filter(r => r.remaining > 0)
-      .map((r, i) => resourceCard(r, slotId, i))
+      .map(r => resourceCard(r, slotId))
       .join("");
 
     return `
@@ -211,6 +291,17 @@
     if (!res.ok) {
       setError(data?.message || "Error cargando datos");
       return;
+    }
+
+    // Guardar datos para usar en updateSummary()
+    data.slots.forEach(slot => {
+      slotsData[slot.slot_id] = slot;
+    });
+
+    for (const [slotIdStr, resources] of Object.entries(data.resourcesBySlot)) {
+      resources.forEach(res => {
+        resourcesData[res.id] = res;
+      });
     }
 
     container.innerHTML = data.slots.map(slot => {
