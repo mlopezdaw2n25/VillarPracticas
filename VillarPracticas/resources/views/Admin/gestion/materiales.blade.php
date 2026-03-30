@@ -98,7 +98,7 @@
                         <div class="grid">
                             <div class="card">
                                 <div class="card-head">
-                                    <h3>Lista de espacios</h3>
+                                    <h3>Lista de Materiales</h3>
                                 </div>
                                 <div class="card-body">
                                     <div style="overflow:auto; max-height: 430px;">
@@ -107,14 +107,20 @@
                                                 <tr>
                                                     <th>ID</th>
                                                     <th>Nombre</th>
+                                                    <th>Cantidad</th>
                                                     <th>Estado</th>
                                                     <th>Acciones</th>
                                                 </tr>
                                             </thead>
                                             <tbody>
-                                                <!--
-
-                                                -->
+                                                 @foreach($materiales as $material)
+                                                    <tr>
+                                                        <td>{{ $material['id'] }}</td>
+                                                        <td>{{ $material['name'] }}</td>
+                                                        <td>{{ $material['total_units'] }}</td>
+                                                        <td>{{ $material['active'] }}</td>
+                                                    </tr>
+                                                    @endforeach
                                             </tbody>
                                         </table>
                                     </div>
@@ -123,25 +129,26 @@
 
                             <div class="card">
                                 <div class="card-head">
-                                    <h3>Crear espacio</h3>
+                                    <h3>Crear Material</h3>
                                 </div>
                                 <div class="card-body">
-                                    <form method="POST" action="#">
+                                    <form method="POST" action="/Admin/gestion/materiales">
                                         @csrf
+                                        @method('POST')
                                         <div class="form">
                                             <div>
                                                 <label for="eNombre">Nombre</label>
-                                                <input id="eNombre" name="nombre" placeholder="Ej: Cámara Canon">
+                                                <input id="eNombre" name="nom" placeholder="Ej: Cámara Canon">
                                             </div>
 
                                             <div>
                                                 <label for="eDesc">Cantidad</label>
-                                                <input id="eDesc" name="descripcion" placeholder="Ej: 1">
+                                                <input id="eDesc" name="cantidad" placeholder="Ej: 1">
                                             </div>
                                         </div>
 
                                         <div class="divider"></div>
-                                        <button class="btn" type="submit">Crear espacio</button>
+                                        <button class="btn" type="submit">Crear Material</button>
                                     </form>
                                 </div>
 

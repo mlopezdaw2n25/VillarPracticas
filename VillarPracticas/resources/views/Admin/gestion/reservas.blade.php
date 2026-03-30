@@ -116,15 +116,24 @@
                                                     <th>Hora de la reserva</th>
                                                     <th>Estado</th>
                                                     <th>Comentario</th>
-                                                    <th>Acciones</th>
+                                                    <th>Recurso</th>
                                                     <th>Cantidad</th>
                                                     <th>Acciones</th>
                                                 </tr>
                                             </thead>
                                             <tbody>
-                                                <!--
-
-                                                -->
+                                               @foreach($reservas as $reserva)
+                                                    <tr>
+                                                     <td>{{ $reserva->id }}</td>
+                                                     <td>{{ $reserva->usuari->nom ?? 'N/A' }}</td>
+                                                     <td>{{ $reserva->date }}</td>
+                                                     <td>{{ $reserva->time_slot_id }}</td>
+                                                     <td>{{ $reserva->status }}</td>
+                                                     <td>{{ $reserva->return_comentario }}</td>
+                                                     <td>falta esto</td>
+                                                     <td>falta esto</td>
+                                                     </tr>
+                                                @endforeach 
                                             </tbody>
                                         </table>
                                     </div>

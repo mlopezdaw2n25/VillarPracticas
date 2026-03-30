@@ -61,6 +61,8 @@ Route::middleware([CheckLogin::class])->group(function () {
 
             //post
             Route::post('/Admin/gestion/usuarios', 'crearUsuario');
+            Route::post('/Admin/gestion/materiales', 'crearMaterial');
+            Route::post('/Admin/gestion/espacios', 'crearespacio');
         });
     });
 

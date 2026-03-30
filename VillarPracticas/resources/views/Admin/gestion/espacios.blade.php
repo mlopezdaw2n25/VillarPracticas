@@ -107,14 +107,20 @@
                                                 <tr>
                                                     <th>ID</th>
                                                     <th>Nombre</th>
+                                                    <th>Cantidad</th>
                                                     <th>Estado</th>
                                                     <th>Acciones</th>
                                                 </tr>
                                             </thead>
                                             <tbody>
-                                                <!--
-
-                                                -->
+                                                 @foreach($espacios as $espacio)
+                                                    <tr>
+                                                        <td>{{ $espacio['id'] }}</td>
+                                                        <td>{{ $espacio['name'] }}</td>
+                                                        <td>{{ $espacio['total_units'] }}</td>
+                                                        <td>{{ $espacio['active'] }}</td>
+                                                    </tr>
+                                                 @endforeach
                                             </tbody>
                                         </table>
                                     </div>
@@ -126,12 +132,13 @@
                                     <h3>Crear espacio</h3>
                                 </div>
                                 <div class="card-body">
-                                    <form method="POST" action="#">
+                                    <form method="POST" action="/Admin/gestion/espacios">
                                         @csrf
+                                        @method('POST')
                                         <div class="form">
                                             <div>
                                                 <label for="eNombre">Nombre</label>
-                                                <input id="eNombre" name="nombre" placeholder="Ej: Aula 109">
+                                                <input id="eNombre" name="nom" placeholder="Ej: Aula 109">
                                             </div>
                                         </div>
 

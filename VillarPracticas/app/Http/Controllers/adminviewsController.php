@@ -5,6 +5,8 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\usuaris;
+use App\Models\Resource;
+use App\Models\Reservation;
 
 class adminviewsController extends Controller
 {
@@ -21,16 +23,20 @@ class adminviewsController extends Controller
     }
 
     public function gestionespacios() {
-        return view('/Admin/gestion/espacios');
+        $materiales = Resource::where('type', 2)->get();
+        return view('/Admin/gestion/espacios', ['espacios' => $materiales]);
     }
 
     public function gestionmaterial() {
-        return view('/Admin/gestion/materiales');
+        $materiales = Resource::where('type', 1)->get();
+        return view('/Admin/gestion/materiales', ['materiales' => $materiales]);
     }
 
     public function gestionreservas() {
-        return view('/Admin/gestion/reservas');
-    }
+        //no esta acabado al 100%
+        $reservas = Reservation::with('usuari')->get();
+        return view('/Admin/gestion/reservas', compact('reservas')); 
+        }
 
     public function gestionusuarios() {
         $usuaris = usuaris::all();
@@ -48,5 +54,25 @@ class adminviewsController extends Controller
         $usuari->save();
         $usuaris = usuaris::all();
         return view('/Admin/gestion/usuarios', ['usuaris' => $usuaris]);
+    }
+
+    public function crearMaterial(Request $req) {
+        $material = new Resource();
+        $material->name = $req->input('nom');
+        $material->total_units = $req->input('cantidad');
+        $material->type = 1;
+        $material->save();
+        $materiales = Resource::where('type', 1)->get();
+        return view('/Admin/gestion/materiales', ['materiales' => $materiales]);
+    }
+
+    public function crearEspacio(Request $req){
+        $material = new Resource();
+        $material->name = $req->input('nom');
+        $material->total_units = 1;
+        $material->type = 2;
+        $material->save();
+        $materiales = Resource::where('type', 2)->get();
+        return view('/Admin/gestion/espacios', ['espacios' => $materiales]);
     }
 }
