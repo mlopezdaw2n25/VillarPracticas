@@ -50,6 +50,7 @@ Route::middleware([CheckLogin::class])->group(function () {
 
     Route::middleware([CheckAdmin::class])->group(function () {
         Route::controller(adminviewsController::class)->group(function (){
+            //get
             Route::get('/Admin/averias/material', 'averiasmaterial');
             Route::get('/Admin/estadisticas/espacios', 'estadisticasespacio');
             Route::get('/Admin/estadisticas/material', 'estadisticasmaterial');
@@ -57,11 +58,14 @@ Route::middleware([CheckLogin::class])->group(function () {
             Route::get('/Admin/gestion/materiales', 'gestionmaterial');
             Route::get('/Admin/gestion/reservas', 'gestionreservas');
             Route::get('/Admin/gestion/usuarios', 'gestionusuarios');
+
+            //post
+            Route::post('/Admin/gestion/usuarios', 'crearUsuario');
         });
     });
 
     Route::middleware([CheckAdmin::class])->group(function () {
-        Route::get('Profesors/admin/{id}', [UsuarisController::class, 'VistaAdmin']);
+        Route::get('/Admin/gestion/usuarios', [UsuarisController::class, 'VistaAdmin']);
     });
 
 });

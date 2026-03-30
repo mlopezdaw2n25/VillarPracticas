@@ -27,7 +27,7 @@ public function login(Request $req)
         ]);
 
         if ($usuari->rol === 'admin') {
-            return redirect("Profesors/admin/" . $usuari->id);
+            return redirect("/Admin/gestion/usuarios");
         }
 
         if ($usuari->rol === 'profe') {
@@ -81,13 +81,15 @@ public function VistaListado(Request $request, $id)
     return redirect('/listado?date=' . $request->query('date')
         . '&slots=' . $request->query('slots'));
 }
-public function VistaAdmin($id)
+public function VistaAdmin()
 {
     if (session('rol') !== 'admin') {
         return redirect('/')->with('error', 'No tens permisos');
     }
 
-    return view('Profesors/admin', ['id' => $id]);
+    $usuaris = usuaris::all();
+
+    return view('/Admin/gestion/usuarios', ['usuaris' => $usuaris]);
 }
 public function logout()
 {

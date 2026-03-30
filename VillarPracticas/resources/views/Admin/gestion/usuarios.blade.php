@@ -89,7 +89,8 @@
                     <div class="toolbar">
                         <div class="search">
                             <span>Buscar</span>
-                            <input type="text" placeholder="Buscar por nombre o ID">
+                            <input type="text" placeholder="Buscar por nombre"> 
+                            <button class="btn" type="submit">Buscar</button>
                         </div>
                     </div>
 
@@ -114,9 +115,15 @@
                                                 </tr>
                                             </thead>
                                             <tbody>
-                                                <!--
-
-                                                -->
+                                                 @foreach($usuaris as $usuari)
+                                                    <tr>
+                                                        <td>{{ $usuari['id'] }}</td>
+                                                        <td>{{ $usuari['nom'] }}</td>
+                                                        <td>{{ $usuari['email'] }}</td>
+                                                        <td>{{ $usuari['rol'] }}</td>
+                                                        <td>{{ $usuari['activo'] }}</td>
+                                                    </tr>
+                                                    @endforeach
                                             </tbody>
                                         </table>
                                     </div>
@@ -128,12 +135,13 @@
                                     <h3>Crear usuario</h3>
                                 </div>
                                 <div class="card-body">
-                                    <form method="POST" action="#">
+                                    <form method="POST" action="/Admin/gestion/usuarios">
                                         @csrf
+                                        @method('POST')
                                         <div class="form">
                                             <div>
                                                 <label for="uNombre">Nombre</label>
-                                                <input id="uNombre" name="nombre" placeholder="Ej: Albert Villar">
+                                                <input id="uNombre" name="nom" placeholder="Ej: Albert Villar">
                                             </div>
 
                                             <div>
@@ -150,7 +158,7 @@
                                             </div>
                                             <div>
                                                 <label for="password">Contraseña</label>
-                                                <input id="password" name="password" placeholder="Ej: Contrasenya123">
+                                                <input id="password" name="contrasenya" placeholder="Ej: Contrasenya123">
                                             </div>
 
 
