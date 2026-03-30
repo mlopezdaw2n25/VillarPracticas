@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\UsuarisController;
 use App\Http\Controllers\ListadoController;
+use App\Http\Controllers\adminviewsController;
 use App\Http\Controllers\Api\AvailabilityController;
 use App\Http\Controllers\Api\ListadoDataController;
 use App\Http\Controllers\Api\ReservationController;
@@ -45,6 +46,18 @@ Route::middleware([CheckLogin::class])->group(function () {
         Route::delete('/reservations/{id}', [ReservationController::class, 'destroy']);
         Route::post('/reservations/{id}/confirm-return', [ReservationController::class, 'confirmReturn']);
 
+    });
+
+    Route::middleware([CheckAdmin::class])->group(function () {
+        Route::controller(adminviewsController::class)->group(function (){
+            Route::get('/Admin/averias/material', 'averiasmaterial');
+            Route::get('/Admin/estadisticas/espacios', 'estadisticasespacio');
+            Route::get('/Admin/estadisticas/material', 'estadisticasmaterial');
+            Route::get('/Admin/gestion/espacios', 'gestionespacios');
+            Route::get('/Admin/gestion/materiales', 'gestionmaterial');
+            Route::get('/Admin/gestion/reservas', 'gestionreservas');
+            Route::get('/Admin/gestion/usuarios', 'gestionusuarios');
+        });
     });
 
     Route::middleware([CheckAdmin::class])->group(function () {
