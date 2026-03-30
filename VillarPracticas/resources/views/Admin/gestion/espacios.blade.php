@@ -119,6 +119,32 @@
                                                         <td>{{ $espacio['name'] }}</td>
                                                         <td>{{ $espacio['total_units'] }}</td>
                                                         <td>{{ $espacio['active'] }}</td>
+                                                        <td>
+                                                            @if ($espacio['active'] === 1)
+                                                                <form method="POST" action="#"
+                                                                    style="display:inline;">
+                                                                    @csrf
+                                                                    @method('PAUSAR')
+                                                                    <button type="submit"
+                                                                        class="btn-action btn-pause">Pausar</button>
+                                                                </form>
+                                                            @else
+                                                                <form method="POST" action="#"
+                                                                    style="display:inline;">
+                                                                    @csrf
+                                                                    @method('REACTIVAR')
+                                                                    <button type="submit"
+                                                                        class="btn-action btn-reactivate">Reactivar</button>
+                                                                </form>
+                                                            @endif
+
+                                                            <form method="POST" action="#" style="display:inline;">
+                                                                @csrf
+                                                                @method('DELETE')
+                                                                <button type="submit"
+                                                                    class="btn-action btn-delete">Eliminar</button>
+                                                            </form>
+                                                        </td>
                                                     </tr>
                                                  @endforeach
                                             </tbody>

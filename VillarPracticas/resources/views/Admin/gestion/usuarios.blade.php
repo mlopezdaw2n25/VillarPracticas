@@ -89,7 +89,7 @@
                     <div class="toolbar">
                         <div class="search">
                             <span>Buscar</span>
-                            <input type="text" placeholder="Buscar por nombre"> 
+                            <input type="text" placeholder="Buscar por nombre">
                             <button class="btn" type="submit">Buscar</button>
                         </div>
                     </div>
@@ -115,15 +115,41 @@
                                                 </tr>
                                             </thead>
                                             <tbody>
-                                                 @foreach($usuaris as $usuari)
+                                                @foreach ($usuaris as $usuari)
                                                     <tr>
                                                         <td>{{ $usuari['id'] }}</td>
                                                         <td>{{ $usuari['nom'] }}</td>
                                                         <td>{{ $usuari['email'] }}</td>
                                                         <td>{{ $usuari['rol'] }}</td>
                                                         <td>{{ $usuari['activo'] }}</td>
+                                                        <td>
+                                                            @if ($usuari['activo'] === 'si')
+                                                                <form method="POST" action="#"
+                                                                    style="display:inline;">
+                                                                    @csrf
+                                                                    @method('PAUSAR')
+                                                                    <button type="submit"
+                                                                        class="btn-action btn-pause">Pausar</button>
+                                                                </form>
+                                                            @else
+                                                                <form method="POST" action="#"
+                                                                    style="display:inline;">
+                                                                    @csrf
+                                                                    @method('REACTIVAR')
+                                                                    <button type="submit"
+                                                                        class="btn-action btn-reactivate">Reactivar</button>
+                                                                </form>
+                                                            @endif
+
+                                                            <form method="POST" action="#" style="display:inline;">
+                                                                @csrf
+                                                                @method('DELETE')
+                                                                <button type="submit"
+                                                                    class="btn-action btn-delete">Eliminar</button>
+                                                            </form>
+                                                        </td>
                                                     </tr>
-                                                    @endforeach
+                                                @endforeach
                                             </tbody>
                                         </table>
                                     </div>
@@ -146,7 +172,8 @@
 
                                             <div>
                                                 <label for="uEmail">Email</label>
-                                                <input id="uEmail" name="email" placeholder="Ej: user@centrevillar.com">
+                                                <input id="uEmail" name="email"
+                                                    placeholder="Ej: user@centrevillar.com">
                                             </div>
 
                                             <div>
@@ -158,7 +185,8 @@
                                             </div>
                                             <div>
                                                 <label for="password">Contraseña</label>
-                                                <input id="password" name="contrasenya" placeholder="Ej: Contrasenya123">
+                                                <input id="password" name="contrasenya"
+                                                    placeholder="Ej: Contrasenya123">
                                             </div>
 
 
