@@ -2,6 +2,7 @@
 <html>
 <head>
     <meta charset="UTF-8">
+    <link rel="icon" type="image/png" href="{{ asset('img/favicon.png') }}">
 </head>
 <body style="font-family: Arial, sans-serif;">
 
